@@ -4,6 +4,7 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -25,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 
 import android.location.Location;
 import android.location.LocationListener;
@@ -42,8 +44,9 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private static final int REQUEST_CODE_LOCATION_PERMISSION = 1001;
-    private static final int REQUEST_CODE_CAMERA_PERMISSION = 1888;
+    private static final int REQUEST_CODE_LOCATION_PERMISSION = 1;
+    private static final int REQUEST_CODE_CAMERA_PERMISSION = 2;
+    private static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION = 3;
     Button btnpicture;
     Button btnshare;
     ImageView imageView;
@@ -89,10 +92,14 @@ public class MainActivity extends AppCompatActivity {
                 if (imguri == null){
                     Toast.makeText(v.getContext(), "No Image to Share", Toast.LENGTH_SHORT).show();
                 } else {
-                    Intent intent = new Intent(Intent.ACTION_SEND);
-                    intent.setType("image/jpeg");
-                    intent.putExtra(Intent.EXTRA_STREAM, imguri);
-                    startActivity(Intent.createChooser(intent, "Share Image"));
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setType("image/jpeg");
+                        intent.putExtra(Intent.EXTRA_STREAM, imguri);
+                        startActivity(Intent.createChooser(intent, "Share Image"));
+                    } else {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
+                    }
                 }
 
             }
@@ -166,5 +173,11 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return uri ;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.i("TAG", "onRequestPermissionsResult: " + requestCode + " " + grantResults[0]);
     }
 }
