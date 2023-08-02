@@ -15,6 +15,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -36,38 +37,64 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import android.Manifest;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private static final int REQUEST_CODE_LOCATION_PERMISSION = 1001;
+    private static final int REQUEST_CODE_CAMERA_PERMISSION = 1888;
     Button btnpicture;
+    Button btnshare;
     ImageView imageView;
     TextView locationTV;
     ActivityResultLauncher<Intent> activityResultLauncher;
     String locationString;
+    Uri imguri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btnpicture = findViewById(R.id.btncamera_id);
+        btnshare = findViewById(R.id.btnshare_id);
         imageView = findViewById(R.id.image);
         locationTV = findViewById(R.id.location);
         locationTV.setText("Location: ");
+        Log.i("TAG", "onCreate: " + imguri);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED){
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION_PERMISSION);
+        }
+
 
         // Request location permission when the button is clicked
         btnpicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Check for location permission before capturing the picture
-                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
                     takePictureAndFetchLocation();
                 } else {
-                    // Request location permission.
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION_PERMISSION);
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_CAMERA_PERMISSION);
+                    }
                 }
+            }
+        });
+
+        btnshare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                if (imguri == null){
+                    Toast.makeText(v.getContext(), "No Image to Share", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.setType("image/jpeg");
+                    intent.putExtra(Intent.EXTRA_STREAM, imguri);
+                    startActivity(Intent.createChooser(intent, "Share Image"));
+                }
+
             }
         });
 
@@ -82,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                 Bitmap bm = result_1.get();
                 imageUri = saveImage(bm, MainActivity.this);
                 imageView.setImageURI(imageUri);
-
+                imguri = imageUri;
                 // Fetch and display location after the picture is taken
                 fetchLocation();
             }

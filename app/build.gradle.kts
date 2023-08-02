@@ -8,8 +8,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.camerax"
-        minSdk = 33
-        targetSdk = 33
+        minSdk = 27
+        targetSdk = 32
         versionCode = 1
         versionName = "1.0"
 
