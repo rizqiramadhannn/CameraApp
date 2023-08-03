@@ -35,7 +35,7 @@ dependencies {
 
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.gms:play-services-location:18.0.0")
-
+    implementation("androidx.core:core-ktx:1.6.0")
     implementation("androidx.camera:camera-camera2:1.1.0-alpha06")
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.camera:camera-lifecycle:1.2.3")
