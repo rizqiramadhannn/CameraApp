@@ -14,7 +14,9 @@ import androidx.core.app.NotificationManagerCompat;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -64,9 +66,11 @@ public class MainActivity extends AppCompatActivity {
     Uri imguri;
     String channelId = "silent_channel_id";
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SharedPreferences sharedPreferences = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
         setContentView(R.layout.activity_main);
         btnpicture = findViewById(R.id.btncamera_id);
         btnshare = findViewById(R.id.btnshare_id);
@@ -81,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED){
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 4);
         }
-
+        if (sharedPreferences.contains("photo")){
+            imageView.setImageURI(Uri.parse(sharedPreferences.getString("photo", "")));
+        }
 
         // Request location permission when the button is clicked
         btnpicture.setOnClickListener(new View.OnClickListener() {
@@ -129,6 +135,9 @@ public class MainActivity extends AppCompatActivity {
                 imageUri = saveImage(bm, MainActivity.this);
                 imageView.setImageURI(imageUri);
                 imguri = imageUri;
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("photo", imageUri.toString());
+                editor.apply();
                 // Fetch and display location after the picture is taken
                 fetchLocation();
             }
