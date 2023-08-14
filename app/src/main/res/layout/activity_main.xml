@@ -24,7 +24,7 @@
         android:text="" />
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:orientation="vertical"
         android:layout_height="0dp">
         <Button
@@ -42,6 +42,15 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/text"
             android:text="Share"
+            android:layout_centerHorizontal="true"
+            />
+
+        <Button
+            android:id="@+id/btnscan_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/text"
+            android:text="Scan"
             android:layout_centerHorizontal="true"
             />
 

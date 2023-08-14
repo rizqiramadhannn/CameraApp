@@ -12,9 +12,11 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.app.NotificationManagerCompat;
 
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -25,6 +27,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -44,6 +47,10 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.journeyapps.barcodescanner.CaptureActivity;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
+
 import android.Manifest;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,11 +66,13 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION = 3;
     Button btnpicture;
     Button btnshare;
+    Button btnscan;
     ImageView imageView;
     TextView locationTV;
     ActivityResultLauncher<Intent> activityResultLauncher;
     String locationString;
     Uri imguri;
+    Intent browserIntent;
     String channelId = "silent_channel_id";
 
 
@@ -74,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         btnpicture = findViewById(R.id.btncamera_id);
         btnshare = findViewById(R.id.btnshare_id);
+        btnscan = findViewById(R.id.btnscan_id);
         imageView = findViewById(R.id.image);
         locationTV = findViewById(R.id.location);
         locationTV.setText("Location: ");
@@ -101,6 +111,13 @@ public class MainActivity extends AppCompatActivity {
                         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_CAMERA_PERMISSION);
                     }
                 }
+            }
+        });
+
+        btnscan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                scanCode();
             }
         });
 
@@ -176,7 +193,34 @@ public class MainActivity extends AppCompatActivity {
         notificationManager.notify(NOTIFICATION_ID, builder.build());
     }
 
+    private void scanCode(){
+        ScanOptions options = new ScanOptions();
+        options.setPrompt("Scan");
+        options.setBeepEnabled(true);
+        options.setCaptureActivity(CaptureActivity.class);
+        barLauncher.launch(options);
+    }
 
+    ActivityResultLauncher<ScanOptions> barLauncher = registerForActivityResult(new ScanContract(), result -> {
+        if(result.getContents() != null){
+            if (URLUtil.isValidUrl(result.getContents())) {
+                // Open the URL
+                browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getContents()));
+                startActivity(browserIntent);
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Result");
+                builder.setMessage(result.getContents());
+                builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                }).show();
+            }
+
+        }
+    });
 
     private void takePictureAndFetchLocation() {
         NotificationManagerCompat notificationManager2 = NotificationManagerCompat.from(this);
